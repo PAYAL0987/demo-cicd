@@ -1,0 +1,49 @@
+name: CI CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  deploy:
+
+    runs-on: self-hosted
+
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Show Files
+        run: dir
+
+      - name: Check Docker
+        run: docker --version
+
+      - name: Build Docker Image
+        run: docker build -t demo-cicd:latest .
+
+      - name: Stop Old Container
+        run: docker stop demo-cicd-container
+        continue-on-error: true
+
+      - name: Remove Old Container
+        run: docker rm demo-cicd-container
+        continue-on-error: true
+
+      - name: Run Container
+        run: docker run -d -p 8080:80 --name demo-cicd-container demo-cicd:latest
+
+      - name: Wait
+        shell: powershell
+        run: Start-Sleep -Seconds 10
+
+      - name: Show Containers
+        run: docker ps
+
+      - name: Test Website
+        shell: powershell
+        run: |
+          Invoke-WebRequest http://localhost:8080
